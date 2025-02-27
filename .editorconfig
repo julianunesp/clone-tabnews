@@ -1,0 +1,8 @@
+# aplicar sempre na raiz
+root = true
+
+# se aplica em todos os arquivos
+[*]
+indent_style = space
+indent_size = 2
+
