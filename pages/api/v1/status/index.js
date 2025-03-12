@@ -3,26 +3,35 @@ import database from "infra/database.js";
 async function status(request, response) {
   const updatedAt = new Date().toISOString();
 
-  const postgresVersion = (await database.query("SELECT version();")).rows[0]
-    .version;
+  const databaseVersionResult = await database.query("SHOW server_version");
+  const databaseVersionValue = databaseVersionResult.rows[0].server_version;
 
-  const postgresCurrentConnections = (
-    await database.query(
-      "SELECT * FROM pg_stat_activity WHERE state = 'active';",
-    )
-  ).rowCount;
+  const databaseName = process.env.POSTGRES_DB;
 
-  const postgresMaxConnections = parseInt(
-    (await database.query("SELECT current_setting('max_connections');")).rows[0]
-      .current_setting,
+  const databaseOpenedConnectionsResult = await database.query({
+    text: "SELECT count(*)::int FROM pg_stat_activity WHERE datname = $1;",
+    values: [databaseName],
+  });
+
+  const databaseOpenedConnectionsValue =
+    databaseOpenedConnectionsResult.rows[0].count;
+
+  const databaseMaxConnectionsResult = await database.query(
+    "SHOW max_connections;",
+  );
+
+  const databaseMaxConnectionsValue = parseInt(
+    databaseMaxConnectionsResult.rows[0].max_connections,
   );
 
   response.status(200).json({
     updated_at: updatedAt,
-    database: {
-      postgres_version: postgresVersion,
-      current_connections: postgresCurrentConnections,
-      max_connections: postgresMaxConnections,
+    dependencies: {
+      database: {
+        postgres_version: databaseVersionValue,
+        current_connections: databaseOpenedConnectionsValue,
+        max_connections: databaseMaxConnectionsValue,
+      },
     },
   });
 }
