@@ -1,6 +1,5 @@
 import cleanDatabase from "infra/database-utils.js";
-//import countMigrations from "infra/database-utils.js";
-//beforeAll(cleanDatabase, countMigrations);
+
 beforeAll(cleanDatabase);
 
 test("POST to /api/v1/migrations should return 200", async () => {
